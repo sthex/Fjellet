@@ -1,0 +1,24 @@
+"ch1on"
+"ch1off"
+"ch2on"
+"ch2off"
+"ch3on"
+"ch3off"
+
+"vvboff"	"VV bereder av.";
+"vvbauto"	"VV bereder AUTO.";
+"vvbon"		"VV bereder på."
+"vkoff"		"Kabel av."
+"vkauto"	"Kabel auto."
+"vkon"		"Kabel på."
+
+"pulseonce"		"PulsAlways set to false"
+"pulsealways"	"PulsAlways set to true"
+"stayonline"    "Stay online for two hour."
+"gotosleep"    		"Request sleep."
+
+"vvbtemp##"		Set VVB temperatur på ## grader.
+"vktemp##"   	Set kabel temperatur på %d grader.
+
+"sleepminutes##"  		Minutes to sleep
+"azuresendminutes###"   Send to Azure hver ### minutt. NB 3 tall!
