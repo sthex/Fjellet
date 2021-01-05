@@ -1,5 +1,4 @@
 // Azure.h
-
 #ifndef _AZURE_h
 #define _AZURE_h
 
@@ -12,43 +11,64 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. 
 
-#include <WiFi.h>
 #include <hexpwd.h>
+#include <WiFi.h>
 #include "AzureIotHub.h"
 #include "Esp32MQTTClient.h"
 
 #define INTERVAL 10000
 
-
-#define DEVICE_ID "T5_n5"
-#define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_n5
-// #define DEVICE_ID "T5_n4"
-// #define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_n4
-
-
+#define DEVICE_ID "VVS1"
+#define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_vvs1
 
 #define MESSAGE_MAX_LEN 256
 
-extern int azureMode;
-extern int azureSendInterval; //6*10min
-extern int azureSendCounter;
+
+static const char *wifinet[] = {
+  HEX_WIFI_IDM,
+  HEX_WIFI_ID1
+};
+static const char *wifipwd[] = {
+  HEX_WIFI_passwordM,
+  HEX_WIFI_password1
+};
+static RTC_DATA_ATTR int wifiNum = 0;
+
+
+static int azureMode;
+static int azureSendInterval; //6*10min
+static int azureSendCounter;
 
 extern void DoCommand(const char *cmd);
 
 //extern ulong timeMode2;    // Min interval in mode 2, average. Default one hour
 //extern ulong timeMode3;    // Min interval in mode 3
 //extern ulong lastSendTimeAzure;        // time of last packet send
-extern bool rebootRequest;
-extern float temperature1;
-extern float temperature2;
-extern float temperature3;
-extern float temperature4;
-extern int wifiFailCount;
-extern int wifiRestarts;
-extern float tmin1;
-extern float tmax1;
-extern float tmin2;
-extern float tmax2;
+//bool rebootRequest;
+extern float temperature11;
+extern float temperature12;
+extern float temperature13;
+extern float temperature14;
+extern float temperature15;
+
+extern float temperature21;
+extern float temperature22;
+extern int lastCh1; //Aux
+extern int lastCh2; //Kabel
+extern int lastCh3; //VVB
+extern int vvbMode;    //0:off, 1:auto, 3:on
+extern int kabelMode;  //0:off, 1:auto, 3:on
+extern int vvbTempSet;  // Auto temperature 
+extern int kabelTempSet; // Auto temperature
+extern int sleepMinutes; // Minutes to sleep
+extern int azureSendMinutes; // Minutes between send to Azure
+
+//extern int wifiFailCount;
+//extern int wifiRestarts;
+//extern float tmin1;
+//extern float tmax1;
+//extern float tmin2;
+//extern float tmax2;
 
 
 static bool hasWifi = false;
@@ -62,7 +82,8 @@ class AzureClass
 public:
 	AzureClass();
 	static void Setup();
-	static void Send();
+  static void SendVVB();
+  static void SendVK();
 	static void Check();
 	static void Disconnect();
 	static void Reconnect();
@@ -84,7 +105,9 @@ private:
 
 	static constexpr char* connectionString = CONNECTION_STRING_AZURE;
 
-	static constexpr char *messageData = "{\"deviceId\":\"%s\", \"messageId\":%d, \"t1\":%f, \"t2\":%f, \"t3\":%f, \"t4\":%f, \"actuate\":%d}";
+	//static constexpr char *messageData = "{\"deviceId\":\"%s\", \"messageId\":%d, \"t1\":%f, \"t2\":%f, \"t3\":%f, \"t4\":%f, \"t5\":%f}";
+	static constexpr char *messageDataVVB = "{\"deviceId\":\"%s\", \"messageId\":%d, \"vvbmode\":%d, \"vvbon\":%d, \"vvbset\":%d, \"t1\":%f, \"t2\":%f}";
+	static constexpr char *messageDataVK = "{\"deviceId\":\"%s\", \"messageId\":%d, \"vkmode\":%d, \"vkon\":%d, \"vkset\":%d, \"t1\":%f, \"t2\":%f, \"t3\":%f, \"t4\":%f, \"t5\":%f}";
 
 	/*
 
