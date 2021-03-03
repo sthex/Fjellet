@@ -6,11 +6,11 @@
 #include "Azure.h"
 
 // IO def
-#define IO_POW3ON  16
+#define IO_POW3ON 16
 #define IO_POW3OFF 17
 #define IO_POW1OFF 18
-#define IO_POW1ON  19
-#define IO_POW2ON  21
+#define IO_POW1ON 19
+#define IO_POW2ON 21
 #define IO_POW2OFF 22
 #define IO_ONEWIRE1 23
 #define IO_ONEWIRE2 26
@@ -18,37 +18,37 @@
 #define MODE_OFF 0
 #define MODE_ON 1
 #define MODE_AUTO 2
-#define ONE_MINUTE  60000ul        // 1 Minutes
-#define HALF_HOUR  1800000ul        // 1/2 hour
-#define ONE_HOUR  3600000ul        // 1 hour
-#define SIX_HOUR  21600000ul        // 6 hour
-#define HOUR12 43200000ul        // 12 hour
-#define uS_TO_M_FACTOR  60000000  /* Conversion factor for micro seconds to minutes */
+#define ONE_MINUTE 60000ul		// 1 Minutes
+#define HALF_HOUR 1800000ul		// 1/2 hour
+#define ONE_HOUR 3600000ul		// 1 hour
+#define SIX_HOUR 21600000ul		// 6 hour
+#define HOUR12 43200000ul		// 12 hour
+#define uS_TO_M_FACTOR 60000000 /* Conversion factor for micro seconds to minutes */
 
-#define MAX_INTERVAL_AZURE_ACTIVE 21600000ul        // Max interval between sends, 6 hour
-#define MAX_INTERVAL_AZURE_AVERAGE 3600000ul        // Max interval between sends, 1 hour
-ulong lastSendTimeAzure = 0;        // time of last packet send
+#define MAX_INTERVAL_AZURE_ACTIVE 21600000ul // Max interval between sends, 6 hour
+#define MAX_INTERVAL_AZURE_AVERAGE 3600000ul // Max interval between sends, 1 hour
+ulong lastSendTimeAzure = 0;				 // time of last packet send
 
 OneWire oneWire1(IO_ONEWIRE1);
 DallasTemperature sensorsVVB(&oneWire1);
 OneWire oneWire2(IO_ONEWIRE2);
 DallasTemperature sensorsVK(&oneWire2);
 
-RTC_DATA_ATTR int sleepMinutes = 4; // Minutes to sleep
-RTC_DATA_ATTR int azureSendMinutes = 59; // Minutes between send to Azure
+RTC_DATA_ATTR int sleepMinutes = 4;			// Minutes to sleep
+RTC_DATA_ATTR int azureSendMinutes = 59;	// Minutes between send to Azure
 RTC_DATA_ATTR int azureSendMinutesVK = 170; // Minutes between send to Azure
-RTC_DATA_ATTR int vvbMode = MODE_OFF;    //0:off, 1:auto, 3:on
-RTC_DATA_ATTR int kabelMode = MODE_AUTO;  //0:off, 1:auto, 3:on
-RTC_DATA_ATTR int vvbTempSet = 10;  // Auto temperature 
-RTC_DATA_ATTR int kabelTempSet = 2; // Auto temperature
+RTC_DATA_ATTR int vvbMode = MODE_OFF;		//0:off, 1:auto, 3:on
+RTC_DATA_ATTR int kabelMode = MODE_AUTO;	//0:off, 1:auto, 3:on
+RTC_DATA_ATTR int vvbTempSet = 10;			// Auto temperature
+RTC_DATA_ATTR int kabelTempSet = 8;			// Auto temperature about 50% on
 RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR int lastCh1 = 9; //Aux 0=off  1=on 9=ukjent fra start
-RTC_DATA_ATTR int lastCh2 = 9; //Kabel
-RTC_DATA_ATTR int lastCh3 = 9; //VVB
-RTC_DATA_ATTR bool pulseAlways = false; //Send ouput on every check in auto
-RTC_DATA_ATTR int ignoreSensorBit=0x01; // ignore sensor 1 (i jorden under inntak) siden den er veldig treg/dempet
-RTC_DATA_ATTR int inhibitSensorBit=0;
-
+RTC_DATA_ATTR int lastCh1 = 9;			  //Aux 0=off  1=on 9=ukjent fra start
+RTC_DATA_ATTR int lastCh2 = 9;			  //Kabel
+RTC_DATA_ATTR int lastCh3 = 9;			  //VVB
+RTC_DATA_ATTR bool pulseAlways = false;	  //Send ouput on every check in auto
+RTC_DATA_ATTR int ignoreSensorBit = 0x01; // ignore sensor 1 (i jorden under inntak) siden den er veldig treg/dempet
+RTC_DATA_ATTR int inhibitSensorBit = 0;
+RTC_DATA_ATTR float deadband = 1.0f;
 
 DeviceAddress TVK0 = {0x28, 0xb0, 0xb7, 0x79, 0xa2, 0x00, 0x03, 0x67}; // kort gummikabel
 DeviceAddress TVK1 = {0x28, 0x78, 0xe3, 0x79, 0xa2, 0x00, 0x03, 0xd3}; // tykk jordkabel
@@ -58,18 +58,18 @@ DeviceAddress TVK3 = {0x28, 0xf5, 0xae, 0x79, 0xa2, 0x00, 0x03, 0x76}; // indre 
 DeviceAddress TG0 = {0x28, 0x83, 0x7a, 0x79, 0xa2, 0x00, 0x03, 0x1d}; // lang gummikabel tip. -127død?
 DeviceAddress TG1 = {0x28, 0xcf, 0x9a, 0x79, 0xa2, 0x00, 0x03, 0xcf}; // lang gummikabel 50cm fra tip. -127død?
 
-DeviceAddress TVK10= {0x28, 0x54, 0x15, 0x79, 0xa2, 0x00, 0x03, 0x22}; // ny gummi VK lang arm. under rør inn
-DeviceAddress TVK11= {0x28, 0xf2, 0x5e, 0x79, 0xa2, 0x00, 0x03, 0x55}; // ny gummi VK kort arm1 mrk. 90 gr bronse bend
-DeviceAddress TVK12= {0x28, 0xf5, 0x41, 0x79, 0xa2, 0x00, 0x03, 0xc3}; // ny gummi VK kort arm2.
+DeviceAddress TVK10 = {0x28, 0x54, 0x15, 0x79, 0xa2, 0x00, 0x03, 0x22}; // ny gummi VK lang arm. under rør inn
+DeviceAddress TVK11 = {0x28, 0xf2, 0x5e, 0x79, 0xa2, 0x00, 0x03, 0x55}; // ny gummi VK kort arm1 mrk. 90 gr bronse bend
+DeviceAddress TVK12 = {0x28, 0xf5, 0x41, 0x79, 0xa2, 0x00, 0x03, 0xc3}; // ny gummi VK kort arm2.
 
-float temperature11=-99.0;
-float temperature12=-99.0;
-float temperature13=-99.0;
-float temperature14=-99.0;
-float temperature15=-99.0;
+float temperature11 = -99.0;
+float temperature12 = -99.0;
+float temperature13 = -99.0;
+float temperature14 = -99.0;
+float temperature15 = -99.0;
 
-float temperature21=-99.0;
-float temperature22=-99.0;
+float temperature21 = -99.0;
+float temperature22 = -99.0;
 bool autoActionDone = false;
 ulong idleSince;
 ulong stayOnlineSec = 10;
@@ -85,23 +85,23 @@ void PulsIo(int io)
 	{
 	case IO_POW3ON:
 		Serial.println("VVB på.");
-    lastCh3 = 1;
+		lastCh3 = 1;
 		break;
 	case IO_POW3OFF:
-    Serial.println("VVB av.");
+		Serial.println("VVB av.");
 		lastCh3 = 0;
 		break;
-  case IO_POW2ON:
-    Serial.println("Kabel på.");
-    lastCh2 = 1;
-    break;
-  case IO_POW2OFF:
-    Serial.println("Kabel av.");
-    lastCh2 = 0;
-    break;
-  case IO_POW1ON:
-    lastCh1 = 1;
-    break;
+	case IO_POW2ON:
+		Serial.println("Kabel på.");
+		lastCh2 = 1;
+		break;
+	case IO_POW2OFF:
+		Serial.println("Kabel av.");
+		lastCh2 = 0;
+		break;
+	case IO_POW1ON:
+		lastCh1 = 1;
+		break;
 	case IO_POW1OFF:
 		lastCh1 = 0;
 		break;
@@ -116,20 +116,19 @@ void EmptySerial()
 	}
 }
 
-
 void DoCommand(const char *cmd)
 {
 	String cmdstring(cmd);
 
-  if (cmdstring.indexOf("reboot") >= 0)
-  {
-    ESP.restart();
-  }
-  
-  if (cmdstring.indexOf("ch1on") >= 0)
-  {
-    PulsIo(IO_POW1ON);
-  }
+	if (cmdstring.indexOf("reboot") >= 0)
+	{
+		ESP.restart();
+	}
+
+	if (cmdstring.indexOf("ch1on") >= 0)
+	{
+		PulsIo(IO_POW1ON);
+	}
 	if (cmdstring.indexOf("ch1off") >= 0)
 	{
 		PulsIo(IO_POW1OFF);
@@ -162,12 +161,12 @@ void DoCommand(const char *cmd)
 		vvbMode = MODE_ON;
 		PulsIo(IO_POW3ON);
 	}
-  if (cmdstring.indexOf("vvboff") >= 0)
-  {
-    Serial.println("VV bereder av.");
-    vvbMode = MODE_OFF;
-    PulsIo(IO_POW3OFF);
-  }
+	if (cmdstring.indexOf("vvboff") >= 0)
+	{
+		Serial.println("VV bereder av.");
+		vvbMode = MODE_OFF;
+		PulsIo(IO_POW3OFF);
+	}
 
 	if (cmdstring.indexOf("vkauto") >= 0)
 	{
@@ -180,12 +179,12 @@ void DoCommand(const char *cmd)
 		kabelMode = MODE_ON;
 		PulsIo(IO_POW2ON);
 	}
-  if (cmdstring.indexOf("vkoff") >= 0)
-  {
-    Serial.println("Kabel av.");
-    kabelMode = MODE_OFF;
-    PulsIo(IO_POW2OFF);
-  }
+	if (cmdstring.indexOf("vkoff") >= 0)
+	{
+		Serial.println("Kabel av.");
+		kabelMode = MODE_OFF;
+		PulsIo(IO_POW2OFF);
+	}
 
 	if (cmdstring.indexOf("pulseonce") >= 0)
 	{
@@ -197,16 +196,16 @@ void DoCommand(const char *cmd)
 		Serial.println("PulsAlways set to true");
 		pulseAlways = true;
 	}
-  if (cmdstring.indexOf("stayonline") >= 0)
-  {
-    Serial.println("Stay online for two hour.");
-    stayOnlineSec = 2 * 60 * 60;
-  }
-  else if (cmdstring.indexOf("gotosleep") >= 0)
-  {
-    Serial.println("Request sleep.");
-    stayOnlineSec = 0;
-  }
+	if (cmdstring.indexOf("stayonline") >= 0)
+	{
+		Serial.println("Stay online for two hour.");
+		stayOnlineSec = 2 * 60 * 60;
+	}
+	else if (cmdstring.indexOf("gotosleep") >= 0)
+	{
+		Serial.println("Request sleep.");
+		stayOnlineSec = 0;
+	}
 
 	int i = cmdstring.indexOf("vvbtemp");
 	if (i >= 0 && cmdstring.length() >= i + 9)
@@ -239,7 +238,7 @@ void DoCommand(const char *cmd)
 		int xt = cmdstring.substring(i + 6, i + 8).toInt();
 		Serial.printf("Ignore vk sensor bit 0x%x.\n", xt);
 		if (xt >= 0x00 && xt < 0x20)
-			ignoreSensorBit = xt;
+			ignoreSensorBit = xt; //eg. vktemp02 deadband02 ignore00, default vktemp02 deadband10 ignore01
 	}
 	i = cmdstring.indexOf("inhibit"); // Inhibit vk sensor bit
 	if (i >= 0 && cmdstring.length() >= i + 9)
@@ -249,28 +248,34 @@ void DoCommand(const char *cmd)
 		if (xt >= 0x00 && xt < 0x20)
 			inhibitSensorBit = xt;
 	}
+	i = cmdstring.indexOf("deadband"); // Deadband of vk temperatur regulator
+	if (i >= 0 && cmdstring.length() >= i + 10)
+	{
+		int xt = cmdstring.substring(i + 8, i + 10).toInt();
+		Serial.printf("Deadband of vk temperatur regulator %f.\n", xt / 10.0f);
+		if (xt >= 1 && xt < 50)
+			deadband = (float)xt / 10.f;
+	}
 
-
-
-  i = cmdstring.indexOf("azuresendminutesvk");  //NB 3 tall godtas 'azuresendminutes123'
-  if (i >= 0 && cmdstring.length() >= i + 19)
-  {
-    int xt = cmdstring.substring(i + 16, i + 19).toInt();
-    Serial.printf("Send VK to Azure hver %d minutt.\n", xt);
-    if (xt > 0 && xt < 99)
-      azureSendMinutesVK = xt;
-  }
-  else
-  {
-    i = cmdstring.indexOf("azuresendminutes");  //NB 3 tall godtas 'azuresendminutes123'
-    if (i >= 0 && cmdstring.length() >= i + 19)
-    {
-      int xt = cmdstring.substring(i + 16, i + 19).toInt();
-      Serial.printf("Send to Azure hver %d minutt.\n", xt);
-      if (xt > 0 && xt < 99)
-        azureSendMinutes = xt;
-    }
-  }
+	i = cmdstring.indexOf("azuresendminutesvk"); //NB 3 tall godtas 'azuresendminutes123'
+	if (i >= 0 && cmdstring.length() >= i + 19)
+	{
+		int xt = cmdstring.substring(i + 16, i + 19).toInt();
+		Serial.printf("Send VK to Azure hver %d minutt.\n", xt);
+		if (xt > 0 && xt < 99)
+			azureSendMinutesVK = xt;
+	}
+	else
+	{
+		i = cmdstring.indexOf("azuresendminutes"); //NB 3 tall godtas 'azuresendminutes123'
+		if (i >= 0 && cmdstring.length() >= i + 19)
+		{
+			int xt = cmdstring.substring(i + 16, i + 19).toInt();
+			Serial.printf("Send to Azure hver %d minutt.\n", xt);
+			if (xt > 0 && xt < 99)
+				azureSendMinutes = xt;
+		}
+	}
 
 	idleSince = millis();
 }
@@ -279,7 +284,7 @@ void ReadTemperature()
 {
 	sensorsVK.requestTemperatures(); // Send the command to get temperatures
 	//if (vkByIndex)
-    //{
+	//{
 	if ((inhibitSensorBit & 0x01) == 0)
 		temperature11 = sensorsVK.getTempC(TVK10);
 	else
@@ -301,7 +306,7 @@ void ReadTemperature()
 	//	temperature13 = sensorsVK.getTempCByIndex(2);
 	//	temperature14 = sensorsVK.getTempCByIndex(3);
 	//	temperature15 = sensorsVK.getTempCByIndex(4);
-  //  Serial.printf("Temperaturer1: %7.2f %7.2f %7.2f %7.2f %7.2f\n", temperature11, temperature12, temperature13, temperature14, temperature15);
+	//  Serial.printf("Temperaturer1: %7.2f %7.2f %7.2f %7.2f %7.2f\n", temperature11, temperature12, temperature13, temperature14, temperature15);
 	//}
 
 	sensorsVVB.requestTemperatures(); // Send the command to get temperatures
@@ -330,37 +335,39 @@ void DoAuto()
 		Serial.printf("Min Temperatur1 (kabel): %7.2f \n", minT1);
 		if (minT1 < 998.0)
 		{
-			if (minT1 < (kabelTempSet - 1.0f))
+			if (minT1 < (kabelTempSet - deadband))
 			{
-				if (lastCh2 != 1) autoActionDone = true;
+				if (lastCh2 != 1)
+					autoActionDone = true;
 				//if (lastCh2 != 1 || pulseAlways)
-					PulsIo(IO_POW2ON);
+				PulsIo(IO_POW2ON);
 			}
-			else if (minT1 > (kabelTempSet + 1.0f))
+			else if (minT1 > (kabelTempSet + deadband))
 			{
-				if (lastCh2 != 0) autoActionDone = true;
-				if (lastCh2 != 0 || pulseAlways)
+				if (lastCh2 != 0)
+					autoActionDone = true;
+				if (lastCh2 != 0 || pulseAlways || (temperature12 > 29.0 && temperature12 < 33.0))
 					PulsIo(IO_POW2OFF);
 			}
 		}
-    else
-    {   // sensor fail
-        if (lastCh2 != 1) autoActionDone = true;
-        if (lastCh2 != 1 || pulseAlways)
-          PulsIo(IO_POW2ON);      
-    }
+		else
+		{ // sensor fail
+			if (lastCh2 != 1)
+				autoActionDone = true;
+			if (lastCh2 != 1 || pulseAlways)
+				PulsIo(IO_POW2ON);
+		}
 	}
-  else if (kabelMode == MODE_ON && lastCh2 == 9)
-  {
-          PulsIo(IO_POW2ON); //Viktig at varmekabel settes på etter strømbrudd
-  }
-  
-  
+	else if (kabelMode == MODE_ON && lastCh2 == 9)
+	{
+		PulsIo(IO_POW2ON); //Viktig at varmekabel settes på etter strømbrudd
+	}
+
 	if (vvbMode == MODE_AUTO)
 	{
-		if (temperature21 < minT2 && temperature21<85.0f && temperature21>-5.0f)
+		if (temperature21 < minT2 && temperature21 < 85.0f && temperature21 > -5.0f)
 			minT2 = temperature21;
-		if (temperature22 < minT2 && temperature22<85.0f && temperature22>-5.0f)
+		if (temperature22 < minT2 && temperature22 < 85.0f && temperature22 > -5.0f)
 			minT2 = temperature22;
 		Serial.printf("Min Temperatur2 (VVB): %7.2f \n", minT2);
 
@@ -368,13 +375,15 @@ void DoAuto()
 		{
 			if (minT2 < (vvbTempSet - 1.0f))
 			{
-				if (lastCh3 != 1) autoActionDone = true;
+				if (lastCh3 != 1)
+					autoActionDone = true;
 				if (lastCh3 != 1 || pulseAlways)
 					PulsIo(IO_POW3ON);
 			}
 			else if (minT2 > (vvbTempSet + 1.0f))
 			{
-				if (lastCh3 != 0) autoActionDone = true;
+				if (lastCh3 != 0)
+					autoActionDone = true;
 				if (lastCh3 != 0 || pulseAlways)
 					PulsIo(IO_POW3OFF);
 			}
@@ -397,24 +406,24 @@ void GotoSleep()
 
 void SendStatus()
 {
-  Azure.SendVVB();
-  for (int i=0;i<10;i++)
-  {
-    delay(400);    
-    Azure.Check();
-  }
-  Azure.SendVK();
+	Azure.SendVVB();
+	for (int i = 0; i < 10; i++)
+	{
+		delay(400);
+		Azure.Check();
+	}
+	Azure.SendVK();
 }
 
 void setup()
 {
 	Serial.begin(115200);
-//Serial.printf("Start setup - Fjellro VannTemp v2020.03.03.\n");
-//Serial.printf("Start setup - Fjellro VannTemp v2020.08.02.\n");// Default auto, 4 grader
-//Serial.printf("Start setup - Fjellro VannTemp v2020.09.02.\n");// Ny kabel. Ignore 25.0 grader
-//   Serial.printf("Start setup - Fjellro VannTemp v2020.09.05.\n");// Ny komanndoer: ignore/inhibit
-  Serial.printf("Start setup - Fjellro VannTemp v2021.01.02.\n");// vktemp 2 gr
-
+	//Serial.printf("Start setup - Fjellro VannTemp v2020.03.03.\n");
+	//Serial.printf("Start setup - Fjellro VannTemp v2020.08.02.\n");// Default auto, 4 grader
+	//Serial.printf("Start setup - Fjellro VannTemp v2020.09.02.\n");// Ny kabel. Ignore 25.0 grader
+	//   Serial.printf("Start setup - Fjellro VannTemp v2020.09.05.\n");// Ny komanndoer: ignore/inhibit
+	// Serial.printf("Start setup - Fjellro VannTemp v2021.01.02.\n"); // vktemp 2 gr
+	Serial.printf("Start setup - Fjellro VannTemp v2021.02.27.\n"); // vktemp 8 gr, ny deadband, vkoff ved 30 grader
 
 	pinMode(IO_POW1ON, OUTPUT);
 	pinMode(IO_POW1OFF, OUTPUT);
@@ -432,12 +441,12 @@ void setup()
 
 	Serial.printf("Init OneWire on pin %d and %d.\n", IO_ONEWIRE1, IO_ONEWIRE2);
 	sensorsVVB.begin(); // temperature one wire
-	sensorsVK.begin(); // temperature one wire
+	sensorsVK.begin();	// temperature one wire
 	ReadTemperature();
 	DoAuto();
- 
-  if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_UNDEFINED &&
-    !autoActionDone && ++bootCount * sleepMinutes < azureSendMinutes && sleepMinutes > 0)
+
+	if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_UNDEFINED &&
+		!autoActionDone && ++bootCount * sleepMinutes < azureSendMinutes && sleepMinutes > 0)
 	{
 		GotoSleep();
 	}
@@ -460,7 +469,8 @@ void loop()
 	static ulong lastTimeTempRead = t;
 	static bool sentStatusToAzureDone = false;
 
-	if (WiFi.status() == WL_CONNECTED) {
+	if (WiFi.status() == WL_CONNECTED)
+	{
 		if (!sentStatusToAzureDone)
 		{
 			SendStatus();
