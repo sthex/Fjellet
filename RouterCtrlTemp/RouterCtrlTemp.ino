@@ -766,10 +766,13 @@ void InitWifiAndAzure()
 			{
 				Serial.println("Press button to start/stop WiFi router.");
 				wifiRestarts++;
+				wifiFailCount = 0;
+				showTextPage("Can't connect to WiFi\nReboot router");
 				PulsOut(RELAY1);  //Reboot router
 				GotoSleep();
 			}
 			Serial.println("Can't connect to WiFi.");
+			showTextPage("Can't connect to WiFi");
 			Serial.flush();
 			GotoSleep();
 			//ESP.restart();
@@ -788,7 +791,7 @@ void InitWifiAndAzure()
 void PulsOut(int io)
  {
 	digitalWrite(io, HIGH);
-	delay(1000);
+	delay(5000);
 	digitalWrite(io, LOW);
  }
 
@@ -827,6 +830,9 @@ void setup()
 	Serial.printf("Init OneWire on pin %d.\n", OneWirePin);
 	sensors.begin(); // temperature one wire
 
+	Serial.printf("Init SPI on pin %d %d %d.\n", SPI_CLK, SPI_MISO, SPI_MOSI);
+	SPI.begin(SPI_CLK, SPI_MISO, SPI_MOSI, -1);  //display?
+
 	if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED) 
 	{
 		Serial.print("\n***** RouterCtrlTemp. Device Id: ");
@@ -838,6 +844,16 @@ void setup()
 		for (int i = 0; i < BUFFSIZE; i++)
 			buff2[i] = buff1[i] = EMPTYBUFF;
 
+		if (digitalRead(BUTTON_3) == LOW)
+		{
+			Serial.println("BUTTON DOWN");
+			for (int i=0;i<3;i++)
+			{
+				DemoOut();
+				delay(500);
+			}	
+		}
+		
 #ifdef TEST
 		int num = BUFFSIZE - 1;
 		for (int i = 0; i < num; i++)
@@ -850,19 +866,6 @@ void setup()
 	}
 
 	ReadTemperature();
-
-	Serial.printf("Init SPI on pin %d %d %d.\n", SPI_CLK, SPI_MISO, SPI_MOSI);
-	SPI.begin(SPI_CLK, SPI_MISO, SPI_MOSI, -1);  //display?
-
-	if (digitalRead(BUTTON_3) == LOW)
-	{
-		Serial.println("BUTTON DOWN");
-		for (int i=0;i<3;i++)
-		{
-			DemoOut();
-			delay(500);
-		}	
-	}
 
 	showMainPage();
 
@@ -983,7 +986,7 @@ void ReadTemperature()
 		buff1[buffIndex1] = EMPTYBUFF;
 	}
 	else
-		temperature1 = -127.0;
+		temperature1 = -99.0;
 
 	if (temperature2 > -80)
 	{
@@ -991,6 +994,8 @@ void ReadTemperature()
 		if (++buffIndex2 >= BUFFSIZE)buffIndex2 = 0;
 		buff2[buffIndex2] = EMPTYBUFF;
 	}
+	else
+		temperature2 = -99.0;
 
 	Serial.printf("   Temperatur %7.2f %7.2f\n", temperature1, temperature2);
 }
