@@ -35,7 +35,7 @@ void AzureClass::Setup()
 	}
 
 	Serial.println(" > IoT Hub");
-	Esp32MQTTClient_SetOption(OPTION_MINI_SOLUTION_NAME, "TTGO-T5-V2-3-2.13-TermoSleep");
+	Esp32MQTTClient_SetOption(OPTION_MINI_SOLUTION_NAME, "VannTemp");
 	//Esp32MQTTClient_Init((const uint8_t*)connectionString, true);
 
 	Esp32MQTTClient_SetSendConfirmationCallback(SendConfirmationCallback);

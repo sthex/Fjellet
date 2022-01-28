@@ -194,9 +194,12 @@ void AzureClass::MessageCallback(const char* payLoad, int size)
 		LogInfo("Set 24 hour interval");
 		azureSendInterval = 6*24;
 	}
-	else
+	else if (size < 80)
 	{
-	  	DoCommand(payLoad);
+		// char todo[80];      
+		// strcpy(todo,payLoad); 
+		cmdstring = String(payLoad);
+	  	// DoCommand(payLoad);
 	}
 }
 
@@ -234,7 +237,8 @@ int  AzureClass::DeviceMethodCallback(const char *methodName, const unsigned cha
 	else if (strcmp(methodName, "do") == 0)
 	{
 		LogInfo("Requested DoCommand");
-		DoCommand((char *)payload);
+		// cmdstring = String(payload)  error: no matching function for call to 'String(const unsigned char*&)'
+		// DoCommand((char *)payload);
 	}
 	else if (strcmp(methodName, "reboot") == 0)
 	{
