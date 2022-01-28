@@ -4,6 +4,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include "Azure.h"
+#include "myTime.h"
 
 // IO def
 #define IO_POW3ON 16
@@ -34,9 +35,9 @@ DallasTemperature sensorsVVB(&oneWire1);
 OneWire oneWire2(IO_ONEWIRE2);
 DallasTemperature sensorsVK(&oneWire2);
 
-RTC_DATA_ATTR int sleepMinutes = 4;			// Minutes to sleep
-RTC_DATA_ATTR int azureSendMinutes = 59;	// Minutes between send to Azure
-RTC_DATA_ATTR int azureSendMinutesVK = 170; // Minutes between send to Azure
+RTC_DATA_ATTR int sleepMinutes = 4;			// Minutes of sleep = 4  ***********************************************************
+RTC_DATA_ATTR int azureSendMinutes = 59;	// Minutes between send to Azure =59
+RTC_DATA_ATTR int azureSendMinutesVK = 170; // Minutes between send to Azure =170
 RTC_DATA_ATTR int vvbMode = MODE_OFF;		//0:off, 1:auto, 3:on
 RTC_DATA_ATTR int kabelMode = MODE_AUTO;	//0:off, 1:auto, 3:on
 RTC_DATA_ATTR int vvbTempSet = 10;			// Auto temperature
@@ -363,7 +364,7 @@ void DoAuto()
 		PulsIo(IO_POW2ON); //Viktig at varmekabel settes på etter strømbrudd
 	}
 
-	if (vvbMode == MODE_AUTO)
+	if (vvbMode == MODE_AUTO)												
 	{
 		if (temperature21 < minT2 && temperature21 < 85.0f && temperature21 > -5.0f)
 			minT2 = temperature21;
@@ -406,13 +407,13 @@ void GotoSleep()
 
 void SendStatus()
 {
-	Azure.SendVVB();
-	for (int i = 0; i < 10; i++)
-	{
-		delay(400);
-		Azure.Check();
-	}
-	Azure.SendVK();
+	// Azure.SendVVB();
+	// for (int i = 0; i < 10; i++)
+	// {
+	// 	delay(400);
+	// 	Azure.Check();
+	// }
+	// Azure.SendVK();
 }
 
 void setup()
@@ -421,9 +422,9 @@ void setup()
 	//Serial.printf("Start setup - Fjellro VannTemp v2020.03.03.\n");
 	//Serial.printf("Start setup - Fjellro VannTemp v2020.08.02.\n");// Default auto, 4 grader
 	//Serial.printf("Start setup - Fjellro VannTemp v2020.09.02.\n");// Ny kabel. Ignore 25.0 grader
-	//   Serial.printf("Start setup - Fjellro VannTemp v2020.09.05.\n");// Ny komanndoer: ignore/inhibit
-	// Serial.printf("Start setup - Fjellro VannTemp v2021.01.02.\n"); // vktemp 2 gr
-	Serial.printf("Start setup - Fjellro VannTemp v2021.02.27.\n"); // vktemp 8 gr, ny deadband, vkoff ved 30 grader
+	//Serial.printf("Start setup - Fjellro VannTemp v2020.09.05.\n");// Ny komanndoer: ignore/inhibit
+	//Serial.printf("Start setup - Fjellro VannTemp v2021.01.02.\n"); // vktemp 2 gr
+	Serial.printf("Start setup - Fjellro VannTemp v2021.02.27.x\n"); // vktemp 8 gr, ny deadband, vkoff ved 30 grader
 
 	pinMode(IO_POW1ON, OUTPUT);
 	pinMode(IO_POW1OFF, OUTPUT);
@@ -455,6 +456,8 @@ void setup()
 
 	Serial.printf("Init Azure.\n");
 	Azure.Setup();
+
+    GetTime();
 
 	EmptySerial();
 	Serial.printf("Setup done.\n");
@@ -506,5 +509,8 @@ void loop()
 		idleSince = t; // In case sleep time is null
 	}
 
-	delay(500);
+	delay(1500);
+	int hour=timeHour();
+	Serial.printf("Time : %d \n", hour);
+    printLocalTime();
 }

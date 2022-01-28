@@ -85,16 +85,16 @@ String azureMsg;
 bool rebootRequest = false;
 const char *wifinet[] = {
 	HEX_WIFI_IDM,
-	HEX_WIFI_IDG,
+	HEX_WIFI_IDX
 };
 const char *wifipwd[] = {
 	HEX_WIFI_passwordM,
-	HEX_WIFI_passwordG
+	HEX_WIFI_passwordX
 };
 #define WIFI_COUNT 2  // Size of wifi array
 
 //RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR ulong stayOnlineMinutes = 10;
+RTC_DATA_ATTR ulong stayOnlineMinutes = 0;
 RTC_DATA_ATTR int azureMode = MODE_ACTIVE;
 RTC_DATA_ATTR int azureSendInterval = 6; //6*10min
 RTC_DATA_ATTR int azureSendCounter = 4; // 0-azureSendInterval
@@ -891,6 +891,11 @@ void setup()
 		ESP.restart();
 	}
 
+	if (!cmdstring.isEmpty())
+	{
+		Serial.printf("DoCommand from setup: '%s'.\n", cmdstring.c_str());
+		DoCommand();
+	}
 
 	if (stayOnlineMinutes == 0)
 		GotoSleep();
@@ -933,6 +938,11 @@ void loop()
 	}
 			
 	Azure.Check();
+	if (!cmdstring.isEmpty())
+	{
+		Serial.printf("DoCommand from loop: '%s'.\n", cmdstring.c_str());
+		DoCommand();
+	}
 	delay(500);
 }
 
@@ -1010,11 +1020,20 @@ void GotoSleep()
 	esp_deep_sleep_start();
 }
 
-void DoCommand(const char *cmd)
+// char todo[80];
+String cmdstring;
+
+// void DoCommand(const char *cmd)
+void DoCommand()
 {
+	if (cmdstring.isEmpty())
+	{
+		Serial.println("DoCommand: nothing to do");
+		return;
+	}
 	Serial.println("DoCommand");
 
-	String cmdstring(cmd);
+	// String cmdstring(cmd);
 
   if (cmdstring.indexOf("reboot") >= 0)
   {
@@ -1024,7 +1043,10 @@ void DoCommand(const char *cmd)
  	if (cmdstring.indexOf("puls1") >= 0)
     {
         Serial.printf("Do puls1.\n");
+		wifiRestarts++;
         PulsOut(RELAY1);
+		// WiFi will die
+		GotoSleep();
     }
 
  	if (cmdstring.indexOf("puls2") >= 0)
@@ -1099,6 +1121,8 @@ void DoCommand(const char *cmd)
         azureSendInterval = xt;
     }
 
-	showTextPage(cmd);
+	showTextPage(cmdstring.c_str());
+	cmdstring.clear();
+
 	idleSince = millis();
 }

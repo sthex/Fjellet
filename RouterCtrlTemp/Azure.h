@@ -20,10 +20,10 @@
 #define INTERVAL 10000
 
 
-#define DEVICE_ID "RC2" //"T5_n5" is now used by 2.9 temp BLE
-#define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_rc2
-// #define DEVICE_ID "T5_n4"
-// #define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_n4
+// #define DEVICE_ID "RC2" //"T5_n5" is now used by 2.9 temp BLE
+// #define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_rc2
+#define DEVICE_ID "T5_n4"
+#define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_n4
 
 
 
@@ -33,7 +33,8 @@ extern int azureMode;
 extern int azureSendInterval; //6*10min
 extern int azureSendCounter;
 
-extern void DoCommand(const char *cmd);
+// extern void DoCommand(const char *cmd);
+extern String cmdstring;
 
 //extern ulong timeMode2;    // Min interval in mode 2, average. Default one hour
 //extern ulong timeMode3;    // Min interval in mode 3

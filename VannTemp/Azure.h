@@ -26,11 +26,11 @@
 
 static const char *wifinet[] = {
   HEX_WIFI_IDM,
-  HEX_WIFI_ID1
+  HEX_WIFI_IDG
 };
 static const char *wifipwd[] = {
   HEX_WIFI_passwordM,
-  HEX_WIFI_password1
+  HEX_WIFI_passwordG
 };
 static RTC_DATA_ATTR int wifiNum = 0;
 
