@@ -209,6 +209,34 @@ void AzureClass::DeviceTwinCallback(DEVICE_TWIN_UPDATE_STATE updateState, const 
 	// Display Twin message.
 	Serial.print("Twin message: ");
 	Serial.println(temp);
+
+
+	// Twin message: {"desired":{"hourtimer":"03310530","$version":2},"reported":{"$version":1}}
+ 	char *token = strtok(temp, "\"");
+   	while( token != NULL ) {
+		if (strcmp(token,"hourtimer")==0)
+		{
+      		token = strtok(NULL, "\""); // ":"
+      		token = strtok(NULL, "\"");
+      		Serial.printf( ">>> %s\n", token );
+			SetTimers(token);
+			token = NULL;
+		}
+		else
+      		token = strtok(NULL, "\"");
+   	}
+
+	// String cmdstring(cmd);
+	// int index = cmdstring.indexOf("\"hourtimer\":")
+	// if (index >= 0 && cmdstring[index+12] == '\"')
+	// {
+
+	// 	int indexEnd = cmdstring.indexOf("\",", index+13)
+	// 	char *str = cmdstring.substring(index + 13, indexEnd).toInt();
+	// 	DoCommand("cleartimers");
+	// 	DoCommand("timer"+str)
+	// }
+
 	free(temp);
 }
 

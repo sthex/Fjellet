@@ -1,6 +1,6 @@
 #include "time.h"
 const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = 3600;
+const long  gmtOffset_sec = 0; //3600;
 const int   daylightOffset_sec = 3600;
 
 int timeHour(){
@@ -10,6 +10,14 @@ int timeHour(){
     return -1;
   }
   return timeinfo.tm_hour;
+}
+int timeMinute(){
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
+    Serial.println("Failed to obtain time");
+    return -1;
+  }
+  return timeinfo.tm_min;
 }
 
 void printLocalTime(){
