@@ -19,6 +19,7 @@
 #define MODE_OFF 0
 #define MODE_ON 1
 #define MODE_AUTO 2
+#define MODE_TIMER 3
 #define ONE_MINUTE 60000ul		// 1 Minutes
 #define HALF_HOUR 1800000ul		// 1/2 hour
 #define ONE_HOUR 3600000ul		// 1 hour
@@ -51,13 +52,16 @@ RTC_DATA_ATTR int ignoreSensorBit = 0x01; // ignore sensor 1 (i jorden under inn
 RTC_DATA_ATTR int inhibitSensorBit = 0;
 RTC_DATA_ATTR float deadband = 1.0f;
 
-DeviceAddress TVK0 = {0x28, 0xb0, 0xb7, 0x79, 0xa2, 0x00, 0x03, 0x67}; // kort gummikabel
-DeviceAddress TVK1 = {0x28, 0x78, 0xe3, 0x79, 0xa2, 0x00, 0x03, 0xd3}; // tykk jordkabel
-DeviceAddress TVK2 = {0x28, 0xf1, 0x80, 0x79, 0xa2, 0x00, 0x03, 0xf0}; // yttre på lang gummikabel
-DeviceAddress TVK3 = {0x28, 0xf5, 0xae, 0x79, 0xa2, 0x00, 0x03, 0x76}; // indre på lang gummikabel. 0.5 over de andre?
+RTC_DATA_ATTR short mytimer[]={-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+RTC_DATA_ATTR short mytimerLastHourDone = -1;
 
-DeviceAddress TG0 = {0x28, 0x83, 0x7a, 0x79, 0xa2, 0x00, 0x03, 0x1d}; // lang gummikabel tip. -127død?
-DeviceAddress TG1 = {0x28, 0xcf, 0x9a, 0x79, 0xa2, 0x00, 0x03, 0xcf}; // lang gummikabel 50cm fra tip. -127død?
+// DeviceAddress TVK0 = {0x28, 0xb0, 0xb7, 0x79, 0xa2, 0x00, 0x03, 0x67}; // kort gummikabel
+// DeviceAddress TVK1 = {0x28, 0x78, 0xe3, 0x79, 0xa2, 0x00, 0x03, 0xd3}; // tykk jordkabel
+// DeviceAddress TVK2 = {0x28, 0xf1, 0x80, 0x79, 0xa2, 0x00, 0x03, 0xf0}; // yttre på lang gummikabel
+// DeviceAddress TVK3 = {0x28, 0xf5, 0xae, 0x79, 0xa2, 0x00, 0x03, 0x76}; // indre på lang gummikabel. 0.5 over de andre?
+
+// DeviceAddress TG0 = {0x28, 0x83, 0x7a, 0x79, 0xa2, 0x00, 0x03, 0x1d}; // lang gummikabel tip. -127død?
+// DeviceAddress TG1 = {0x28, 0xcf, 0x9a, 0x79, 0xa2, 0x00, 0x03, 0xcf}; // lang gummikabel 50cm fra tip. -127død?
 
 DeviceAddress TVK10 = {0x28, 0x54, 0x15, 0x79, 0xa2, 0x00, 0x03, 0x22}; // ny gummi VK lang arm. under rør inn
 DeviceAddress TVK11 = {0x28, 0xf2, 0x5e, 0x79, 0xa2, 0x00, 0x03, 0x55}; // ny gummi VK kort arm1 mrk. 90 gr bronse bend
@@ -120,10 +124,17 @@ void EmptySerial()
 void DoCommand(const char *cmd)
 {
 	String cmdstring(cmd);
-
+	int i = -1;
+	
 	if (cmdstring.indexOf("reboot") >= 0)
 	{
 		ESP.restart();
+	}
+	if (cmdstring.indexOf("cleartimers") >= 0)
+	{
+		Serial.printf("Clear all timers.\n");
+		for (int i=0;i<24;i++)
+			mytimer[i]=-1;
 	}
 
 	if (cmdstring.indexOf("ch1on") >= 0)
@@ -156,17 +167,52 @@ void DoCommand(const char *cmd)
 		Serial.println("VV bereder AUTO.");
 		vvbMode = MODE_AUTO;
 	}
-	if (cmdstring.indexOf("vvbon") >= 0)
+
+	i = cmdstring.indexOf("vvbon");
+	if (i >= 0)
 	{
-		Serial.println("VV bereder på.");
-		vvbMode = MODE_ON;
-		PulsIo(IO_POW3ON);
+		int hour=-1;
+		if (cmdstring.length() >= i + 7 && cmdstring[i+5] >= '0' && cmdstring[i+5] <= '9')//bug? 7 was 8. VVB1 STILL 8
+			hour = cmdstring.substring(i + 5, i + 7).toInt();
+
+		if (hour >= 0 && hour < 24)
+		{
+			Serial.printf("Set VVB on kl. %d .\n", hour);
+			mytimer[hour] = 31;
+			vvbMode = MODE_TIMER;
+		}
+		else
+		{
+			Serial.println("VV bereder på.");
+			vvbMode = MODE_ON;
+			PulsIo(IO_POW3ON);
+		}
 	}
-	if (cmdstring.indexOf("vvboff") >= 0)
+
+	i = cmdstring.indexOf("vvboff");
+	if (i >= 0)
 	{
-		Serial.println("VV bereder av.");
-		vvbMode = MODE_OFF;
-		PulsIo(IO_POW3OFF);
+		int hour=-1;
+		if (cmdstring.length() >= i + 8 && cmdstring[i+6] >= '0' && cmdstring[i+6] <= '9')
+			hour = cmdstring.substring(i + 6, i + 8).toInt();
+
+		if (hour >= 0 && hour < 24)
+		{
+			Serial.printf("Set VVB off kl. %d .\n", hour);
+			mytimer[hour] = 30;
+			vvbMode = MODE_TIMER;
+		}
+		else
+		{
+			Serial.println("VV bereder av.");
+			vvbMode = MODE_OFF;
+			PulsIo(IO_POW3OFF);
+		}
+	}
+	if (cmdstring.indexOf("vvbtimer") >= 0)
+	{
+		Serial.println("VV bereder Timer mode.");
+		vvbMode = MODE_TIMER;
 	}
 
 	if (cmdstring.indexOf("vkauto") >= 0)
@@ -208,7 +254,7 @@ void DoCommand(const char *cmd)
 		stayOnlineSec = 0;
 	}
 
-	int i = cmdstring.indexOf("vvbtemp");
+	i = cmdstring.indexOf("vvbtemp");
 	if (i >= 0 && cmdstring.length() >= i + 9)
 	{
 		int xt = cmdstring.substring(i + 7, i + 9).toInt();
@@ -277,6 +323,127 @@ void DoCommand(const char *cmd)
 				azureSendMinutes = xt;
 		}
 	}
+
+	// vvboff vvbtimer timer04310530
+
+	i = cmdstring.indexOf("timer") + 5; // timer og time og cmd, "timer-10010311130"
+	while (i >= 5 && cmdstring.length() >= i + 4)
+	{
+		int hour = cmdstring.substring(i + 0, i + 2).toInt();
+		int icmd = cmdstring.substring(i + 2, i + 4).toInt();
+		if (hour < 0)
+		{
+			Serial.printf("Clear all timers.\n");
+			for (int i=0;i<24;i++)
+				mytimer[i]=-1;
+		}
+		else  if (hour < 24 && icmd > 0 && icmd < 127 )
+		{
+			Serial.printf("Timer ved time %d kommando %d.\n", hour, icmd);
+			mytimer[hour]=(short)icmd;
+			if (icmd == 30 || icmd == 31 )
+				vvbMode = MODE_TIMER;
+		}
+		i+=4;
+	}
+
+	idleSince = millis();
+}
+void SetTimers(char *txt)
+{
+	int len = strlen(txt);
+	Serial.printf("SetTimers %s (len=%d).\n", txt, len);
+	if (len>=4)
+	{
+		for (int i=0; i<len; i+=4)
+		{
+			int hour = 10* (*(txt+i)-'0') + (*(txt+i+1) -'0') ;
+			int icmd = 10* (*(txt+i+2)-'0') + (*(txt+i+3) -'0');
+			if (*(txt+i) == '-' || hour < 0 )
+			{
+				Serial.printf("Clear all timers.\n");
+				for (int i=0;i<24;i++)
+					mytimer[i]=-1;
+			}
+			else  if (hour < 24 && icmd > 0 && icmd < 127 )
+			{
+				Serial.printf("Timer ved time %d kommando %d.\n", hour, icmd);
+				mytimer[hour]=(short)icmd;
+				if (icmd == 30 || icmd == 31 )
+					vvbMode = MODE_TIMER;
+			}
+		}
+	}
+
+}
+void SetTimersS(String txt)
+{
+	Serial.printf("SetTimers %s.\n", txt.c_str());
+	int i=0;
+	
+	while (txt.length() >= i + 4)
+	{
+		int hour = txt.substring(i + 0, i + 2).toInt();
+		int icmd = txt.substring(i + 2, i + 4).toInt();
+		if (hour < 0)
+		{
+			Serial.printf("Clear all timers.\n");
+			for (int i=0;i<24;i++)
+				mytimer[i]=-1;
+		}
+		else  if (hour < 24 && icmd > 0 && icmd < 127 )
+		{
+			Serial.printf("Timer ved time %d kommando %d.\n", hour, icmd);
+			mytimer[hour]=(short)icmd;
+			if (icmd == 30 || icmd == 31 )
+				vvbMode = MODE_TIMER;
+		}
+		i+=4;
+	}
+}
+void DoCommandI(int icmd)
+{
+	Serial.printf("DoCommandI %d \n", icmd);
+
+	switch (icmd)
+	{
+		case 30:
+			Serial.println("VV bereder av...");
+			PulsIo(IO_POW3OFF);
+			break;
+		case 31:
+			Serial.println("VV bereder på...");
+			PulsIo(IO_POW3ON);
+			break;
+		// case 32:
+		// 	DoCommand("vvbauto");
+		// 	break;
+		// case 21:
+		// 	DoCommand("vkon");
+		// 	break;
+		// case 20:
+		// 	DoCommand("vkoff");
+		// 	break;
+		// case 22:
+		// 	DoCommand("vkauto");
+		// 	break;
+		// case 10:
+		// 	DoCommand("ch1on");
+		// 	break;
+		// case 11:
+		// 	DoCommand("ch1off");
+		// 	break;
+		// case 40:
+		// 	DoCommand("stayonline");
+		// 	break;
+		// case 41:
+		// 	DoCommand("gotosleep");
+		// 	break;
+		default:
+			Serial.printf("DoCommandI %d NOT KNOWN!\n", icmd);
+			break;
+	}
+
 
 	idleSince = millis();
 }
@@ -363,6 +530,8 @@ void DoAuto()
 	{
 		PulsIo(IO_POW2ON); //Viktig at varmekabel settes på etter strømbrudd
 	}
+	// else if (vkMode == MODE_TIMER){}												
+
 
 	if (vvbMode == MODE_AUTO)												
 	{
@@ -390,6 +559,23 @@ void DoAuto()
 			}
 		}
 	}
+	else if (vvbMode == MODE_TIMER)												
+	{
+		int hour = timeHour();
+		// int hour = timeMinute();
+		// if (hour >= 30) hour -= 30;
+	
+		Serial.printf("Check timer for hour: %d \n", hour);
+		if (hour != mytimerLastHourDone && hour>=0 && hour < 24)
+		{
+			mytimerLastHourDone = hour;
+			if (mytimer[hour] > 0)
+			{
+				DoCommandI(mytimer[hour]);
+				autoActionDone = true;
+			}	
+		}
+	}
 }
 
 void GotoSleep()
@@ -407,13 +593,13 @@ void GotoSleep()
 
 void SendStatus()
 {
-	// Azure.SendVVB();
-	// for (int i = 0; i < 10; i++)
-	// {
-	// 	delay(400);
-	// 	Azure.Check();
-	// }
-	// Azure.SendVK();
+	Azure.SendVVB();
+	for (int i = 0; i < 10; i++)
+	{
+		delay(400);
+		Azure.Check();
+	}
+	Azure.SendVK();
 }
 
 void setup()
@@ -424,7 +610,8 @@ void setup()
 	//Serial.printf("Start setup - Fjellro VannTemp v2020.09.02.\n");// Ny kabel. Ignore 25.0 grader
 	//Serial.printf("Start setup - Fjellro VannTemp v2020.09.05.\n");// Ny komanndoer: ignore/inhibit
 	//Serial.printf("Start setup - Fjellro VannTemp v2021.01.02.\n"); // vktemp 2 gr
-	Serial.printf("Start setup - Fjellro VannTemp v2021.02.27.x\n"); // vktemp 8 gr, ny deadband, vkoff ved 30 grader
+	// Serial.printf("Start setup - Fjellro VannTemp v2021.02.27.\n"); // vktemp 8 gr, ny deadband, vkoff ved 30 grader
+	Serial.printf("Start setup - Fjellro VannTemp v2022.02.00.\n"); // tmers
 
 	pinMode(IO_POW1ON, OUTPUT);
 	pinMode(IO_POW1OFF, OUTPUT);
@@ -446,8 +633,15 @@ void setup()
 	ReadTemperature();
 	DoAuto();
 
-	if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_UNDEFINED &&
-		!autoActionDone && ++bootCount * sleepMinutes < azureSendMinutes && sleepMinutes > 0)
+	// int hour=timeHour();
+	// Serial.printf("Time : %d \n", hour);
+    // printLocalTime();
+
+
+	if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED)
+	{
+	}
+	else if (!autoActionDone && ++bootCount * sleepMinutes < azureSendMinutes && sleepMinutes > 0)
 	{
 		GotoSleep();
 	}
@@ -457,7 +651,7 @@ void setup()
 	Serial.printf("Init Azure.\n");
 	Azure.Setup();
 
-    GetTime();
+    // GetTime();
 
 	EmptySerial();
 	Serial.printf("Setup done.\n");
@@ -510,7 +704,7 @@ void loop()
 	}
 
 	delay(1500);
-	int hour=timeHour();
-	Serial.printf("Time : %d \n", hour);
-    printLocalTime();
+	// int hour=timeHour();
+	// Serial.printf("Time : %d \n", hour);
+    // printLocalTime();
 }

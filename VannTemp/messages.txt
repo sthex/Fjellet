@@ -22,3 +22,9 @@
 
 "sleepminutes##"  		Minutes to sleep
 "azuresendminutes###"   Send to Azure hver ### minutt. NB 3 tall!
+
+
+ønsket: ---------------
+
+t01(vvbon) t05(vvboff tclear05)
+

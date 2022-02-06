@@ -18,6 +18,8 @@
 
 #define INTERVAL 10000
 
+// #define DEVICE_ID "RC2"
+// #define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_rc2
 #define DEVICE_ID "VVS1"
 #define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_vvs1
 
@@ -40,7 +42,7 @@ static int azureSendInterval; //6*10min
 static int azureSendCounter;
 
 extern void DoCommand(const char *cmd);
-
+extern void SetTimers(char *txt);
 //extern ulong timeMode2;    // Min interval in mode 2, average. Default one hour
 //extern ulong timeMode3;    // Min interval in mode 3
 //extern ulong lastSendTimeAzure;        // time of last packet send
