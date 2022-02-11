@@ -20,10 +20,10 @@
 #define INTERVAL 10000
 
 
-// #define DEVICE_ID "RC2" //"T5_n5" is now used by 2.9 temp BLE
-// #define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_rc2
-#define DEVICE_ID "T5_n4"
-#define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_n4
+#define DEVICE_ID "RC2" // på båten   "T5_n5" is now used by 2.9 temp BLE
+#define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_rc2
+// #define DEVICE_ID "T5_n4"  // org. Fjellro router control
+// #define CONNECTION_STRING_AZURE CONNECTION_STRING_AZURE_n4
 
 
 

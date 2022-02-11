@@ -236,7 +236,7 @@ void DoCommand(const char *cmd)
 	if (cmdstring.indexOf("pulseonce") >= 0)
 	{
 		Serial.println("PulsAlways set to false");
-		pulseAlways = true;
+		pulseAlways = false;
 	}
 	else if (cmdstring.indexOf("pulsealways") >= 0)
 	{
