@@ -172,7 +172,7 @@ void DoCommand(const char *cmd)
 	if (i >= 0)
 	{
 		int hour=-1;
-		if (cmdstring.length() >= i + 7 && cmdstring[i+5] >= '0' && cmdstring[i+5] <= '9')//bug? 7 was 8. VVB1 STILL 8
+		if (cmdstring.length() >= i + 7 && cmdstring[i+5] >= '0' && cmdstring[i+5] <= '2' && cmdstring[i+6] >= '0' && cmdstring[i+6] <= '9')
 			hour = cmdstring.substring(i + 5, i + 7).toInt();
 
 		if (hour >= 0 && hour < 24)
@@ -193,7 +193,7 @@ void DoCommand(const char *cmd)
 	if (i >= 0)
 	{
 		int hour=-1;
-		if (cmdstring.length() >= i + 8 && cmdstring[i+6] >= '0' && cmdstring[i+6] <= '9')
+		if (cmdstring.length() >= i + 8 && cmdstring[i+6] >= '0' && cmdstring[i+6] <= '2' && cmdstring[i+7] >= '0' && cmdstring[i+7] <= '9')
 			hour = cmdstring.substring(i + 6, i + 8).toInt();
 
 		if (hour >= 0 && hour < 24)
@@ -209,7 +209,7 @@ void DoCommand(const char *cmd)
 			PulsIo(IO_POW3OFF);
 		}
 	}
-	if (cmdstring.indexOf("vvbtimer") >= 0)
+	if (cmdstring.indexOf("vvbtmode") >= 0)
 	{
 		Serial.println("VV bereder Timer mode.");
 		vvbMode = MODE_TIMER;
@@ -279,6 +279,7 @@ void DoCommand(const char *cmd)
 		if (xt >= 0 && xt < 99)
 			sleepMinutes = xt;
 	}
+
 	i = cmdstring.indexOf("ignore"); // Ignore vk sensor value in auto
 	if (i >= 0 && cmdstring.length() >= i + 8)
 	{
@@ -324,9 +325,9 @@ void DoCommand(const char *cmd)
 		}
 	}
 
-	// vvboff vvbtimer timer04310530
+	// vvboff vvbtmode timer04310530
 
-	i = cmdstring.indexOf("timer") + 5; // timer og time og cmd, "timer-10010311130"
+	i = cmdstring.indexOf("timer") + 5; // timer + time + cmd, "timer-10010311130"
 	while (i >= 5 && cmdstring.length() >= i + 4)
 	{
 		int hour = cmdstring.substring(i + 0, i + 2).toInt();
@@ -349,7 +350,7 @@ void DoCommand(const char *cmd)
 
 	idleSince = millis();
 }
-void SetTimers(char *txt)
+void SetTimers(char *txt)  // From DeviceTwinCallback
 {
 	int len = strlen(txt);
 	Serial.printf("SetTimers %s (len=%d).\n", txt, len);
@@ -514,7 +515,8 @@ void DoAuto()
 			{
 				if (lastCh2 != 0)
 					autoActionDone = true;
-				if (lastCh2 != 0 || pulseAlways || (temperature12 > 29.0 && temperature12 < 33.0))
+				if (lastCh2 != 0 || pulseAlways ||
+					(temperature12 > 26.0 && temperature12 < 33.0 && temperature13 > 18.0 && temperature13 < 33.0)) // last off have failed
 					PulsIo(IO_POW2OFF);
 			}
 		}
@@ -611,7 +613,7 @@ void setup()
 	//Serial.printf("Start setup - Fjellro VannTemp v2020.09.05.\n");// Ny komanndoer: ignore/inhibit
 	//Serial.printf("Start setup - Fjellro VannTemp v2021.01.02.\n"); // vktemp 2 gr
 	// Serial.printf("Start setup - Fjellro VannTemp v2021.02.27.\n"); // vktemp 8 gr, ny deadband, vkoff ved 30 grader
-	Serial.printf("Start setup - Fjellro VannTemp v2022.02.00.\n"); // tmers
+	Serial.printf("Start setup - Fjellro VannTemp v2022.02.20.\n"); // tmers
 
 	pinMode(IO_POW1ON, OUTPUT);
 	pinMode(IO_POW1OFF, OUTPUT);
